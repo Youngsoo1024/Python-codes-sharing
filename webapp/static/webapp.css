@@ -1,0 +1,26 @@
+body {
+    font-family: Verdana, Geneva, Arial ,sans-serif;
+    background-color: rgb(160, 240, 240);
+    margin: 10%;
+}
+/* level 2 headers appear in a larger font size */
+
+h2 {
+    font-size: 150%;
+}
+/* standard "submit" button is given a makeover. */
+input[type=submit] {
+    width: 8em;
+    color: white;
+    background-color: blue;
+    font-weight: bold;
+}
+/* any anchor tags on the page react when you hover your mouse over them. */
+a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
