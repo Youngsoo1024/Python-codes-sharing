@@ -1,5 +1,4 @@
 import yt_dlp
-
 def download_with_yt_dlp(video_url):
     ydl_opts = {
         'format': 'best',  # Selects the best available format
