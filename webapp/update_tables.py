@@ -7,7 +7,7 @@ import os
 FOLDER = "swimdata/"
 
 files = os.listdir(FOLDER)
-files.remove(".DS_Store")
+#files.remove(".DS_Store")
 
 
 SQL_SELECT_SWIMMERS = """

@@ -1,47 +1,68 @@
 
 # lower case for module names, upper case for class names
 from flask import Flask, session, render_template, request
-
+import data_utils
 import os
 import swimclub
+import convert_utils
 
 # dunder names is associate the webapp with your code's current namesapace.
 app = Flask(__name__)
-app.secret_key = "You will never guess.."
+app.secret_key = "You will never guess..why I am using this string."
 
 @app.get("/")
 def index():
     # when invoked, this function, called "index", returns this exciting string
     return render_template("index.html",title = "Welcome to Swimclub",)
 
-def populate_data():
-    if "swimmers" not in session:
-        swim_files = os.listdir(swimclub.FOLDER)
-        session["swimmers"] = {}
-        for file in swim_files:
-            name, *_ = swimclub.read_swim_data(file)
-            if name not in session["swimmers"]:
-                session["swimmers"][name] = []
-            session["swimmers"][name].append(file)
+@app.get("/swims")
+def display_swim_sessions():
+    data = data_utils.get_swim_sessions()
+    dates = [session[0].split(" ")[0] for session in data]  # SQLite3.
+    return render_template(
+        "select.html",
+        title="Select a swim session",
+        url="/swimmers",
+        select_id="chosen_date",
+        data=dates,
+    )
 
-@app.get('/swimmers')
+@app.post("/swimmers")
 def display_swimmers():
-    populate_data()
-    return render_template("select.html", title="slecet a swimmer", url="/showfiles", select_id="swimmer", data = sorted(session["swimmers"]),)
+    session["chosen_date"] = request.form["chosen_date"]
+    data = data_utils.get_session_swimmers(session["chosen_date"])
+    swimmers = [f"{swimmer[0]}-{swimmer[1]}" for swimmer in data]
+    return render_template(
+        "select.html",
+        title="Select a swimmer",
+        url="/showevents",
+        select_id="swimmer",
+        data=sorted(swimmers),
+    )
 
-@app.post("/showfiles")
-def display_swimmer_files():
-    populate_data()
-    name = request.form["swimmer"]
-    return render_template("select.html", title = "Select an event", url="/showbarchart", select_id = "file", data = session["swimmers"][name],)
-#This is the famous "dunder name equals dunder main" idiom. We've more to say about this "if" statement later.
+
+@app.post("/showevents")
+def display_swimmer_events():
+    session["swimmer"], session["age"] = request.form["swimmer"].split("-")
+    data = data_utils.get_swimmers_events(session["swimmer"], session["age"], session["chosen_date"])
+    events = [f"{event[0]} {event[1]}" for event in data]
+    return render_template("select.html", title="Select an event", url="/showbarchart", select_id="file", data=events,)
 
 @app.post("/showbarchart")
 def show_bar_chart():
-    file_id = request.form["file"]
-    location = swimclub.produce_bar_chart(file_id, "templates/")
-    return render_template(location.split("/")[-1])
-
+    distance, stroke = request.form["file"].split(" ")
+    data = data_utils.get_swimmers_times(session["swimmer"], session["age"], distance, stroke, session["chosen_date"])
+    times = [time[0] for time in data]
+    average_str, times_reversed, scaled = convert_utils.perform_conversions(times)
+    world_records = convert_utils.get_worlds(distance, stroke)
+    header = f"{session['swimmer']} (Under {session['age']}) {distance} {stroke} - {session['chosen_date']}"
+    return render_template(
+        "chart.html",
+        title=header,
+        data=list(zip(times_reversed, scaled)),
+        average=average_str,
+        worlds=world_records,
+    )
 if __name__ == "__main__":
     # This line of code runs Flask's built-in web server, then feeds your webapp code to it.
     app.run(debug=True)
