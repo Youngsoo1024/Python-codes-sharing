@@ -9,7 +9,7 @@ if "aws" in platform.uname().release:
         "host": "Youngsoo82.mysql.pythonanywhere-services.com",
         "database": "Youngsoo82$default",
         "user": "Youngsoo82",
-        "password": "Kysp5448**",
+        "password": "Kysp5448**",   
     }
 else:
     # Running locally.
